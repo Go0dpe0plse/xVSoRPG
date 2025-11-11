@@ -1,35 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:background="#121212">
 
-    <GridLayout
-        android:id="@+id/grid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:background="@android:color/transparent"
-        android:columnCount="3"
-        android:rowCount="3"/>
+    <!-- Основне поле -->
 
-    <Button
-        android:id="@+id/btn_restart"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#3a86ff"
-        android:text="Нова гра"
-        android:textColor="@android:color/white"
-        android:textSize="18sp" />
+    <!-- Затемнення + повідомлення + кнопки -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_menu"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Головне меню"
-        android:textSize="18sp" />
+        <GridLayout
+            android:id="@+id/grid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:columnCount="3"
+            android:rowCount="3" />
+    </LinearLayout>
 
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/end_screen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingTop="80dp"
+        android:paddingBottom="80dp"
+        android:background="#AA000000"
+        android:visibility="gone">
+
+        <!-- Повідомлення про результат над дошкою -->
+        <TextView
+            android:id="@+id/resultText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Перемога!"
+            android:textColor="@android:color/white"
+            android:textSize="36sp"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Простір щоб дошка не зміщувалась -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- Кнопки під дошкою -->
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btn_restart"
+                android:text="Нова гра"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#3a86ff"
+                android:textColor="@android:color/white"/>
+
+            <Button
+                android:id="@+id/btn_menu"
+                android:text="Головне меню"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

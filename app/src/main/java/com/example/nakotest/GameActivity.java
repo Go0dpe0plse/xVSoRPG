@@ -11,15 +11,24 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 
 public class GameActivity extends Activity {
 
+    private TextView resultText;
+    private Button restartBtn, menuBtn;
+    private LinearLayout gameLayout;
+    private LinearLayout endScreen;
+    private FrameLayout gridHolder;
+    private GridLayout grid;
+
     private boolean xTurn = true;
     private boolean gameOver = false;
-    private final Handler handler = new Handler(); // ✅ глобальний handler для керування анімаціями
+    private final Handler handler = new Handler();
+
     private ImageView[][] cells = new ImageView[3][3];
     private FrameLayout[][] containers = new FrameLayout[3][3];
     private Drawable xDrawable, oDrawable, plateDrawable;
@@ -29,16 +38,24 @@ public class GameActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        // UI elements
+        grid = findViewById(R.id.grid);
+        endScreen = findViewById(R.id.end_screen);
+
+        restartBtn = findViewById(R.id.btn_restart);
+        menuBtn = findViewById(R.id.btn_menu);
+        resultText = findViewById(R.id.resultText);
+
         xDrawable = getDrawable(R.drawable.x);
         oDrawable = getDrawable(R.drawable.o);
         plateDrawable = getDrawable(R.drawable.plate);
 
-        GridLayout grid = findViewById(R.id.grid);
         int size = 250;
 
         // === створення поля ===
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
+
                 FrameLayout cellContainer = new FrameLayout(this);
                 ImageView plate = new ImageView(this);
                 ImageView symbol = new ImageView(this);
@@ -54,25 +71,18 @@ public class GameActivity extends Activity {
                 cellContainer.addView(plate);
                 cellContainer.addView(symbol);
 
-                int r = row, c = col;
-
-                // === клік по клітинці ===
+                // click
                 cellContainer.setOnClickListener(v -> {
                     if (gameOver) return;
-                    if (symbol.getTag() != null) return; // клітинка вже зайнята
+                    if (symbol.getTag() != null) return;
 
                     int animRes = xTurn ? R.drawable.xanim : R.drawable.oanim;
                     int finalResId = xTurn ? R.drawable.x : R.drawable.o;
 
-                    // створюємо копію анімації
-                    AnimationDrawable animation =
-                            (AnimationDrawable) ContextCompat.getDrawable(this, animRes).mutate();
-
+                    AnimationDrawable animation = (AnimationDrawable) ContextCompat.getDrawable(this, animRes).mutate();
                     symbol.setImageDrawable(animation);
                     symbol.setVisibility(View.VISIBLE);
-                    symbol.bringToFront();
                     symbol.setTag(xTurn ? "X" : "O");
-
                     animation.start();
 
                     int totalDuration = 0;
@@ -80,20 +90,15 @@ public class GameActivity extends Activity {
                         totalDuration += animation.getDuration(i);
                     }
 
-                    // ✅ Використовуємо глобальний handler (щоб потім можна було зупинити)
                     handler.postDelayed(() -> {
                         if (!gameOver && symbol.getTag() != null)
                             symbol.setImageResource(finalResId);
                     }, totalDuration);
 
-                    // === перевірка перемоги ===
                     if (checkWinner()) {
-                        Toast.makeText(this, "Переміг " + (xTurn ? "X" : "O"), Toast.LENGTH_SHORT).show();
-                        gameOver = true;
-                        disableBoard();
+                        showResult(xTurn ? "WIN X" : "WIN O");
                     } else if (isFull()) {
-                        Toast.makeText(this, "Нічия!", Toast.LENGTH_SHORT).show();
-                        gameOver = true;
+                        showResult("DRAW");
                     } else {
                         xTurn = !xTurn;
                     }
@@ -105,26 +110,18 @@ public class GameActivity extends Activity {
             }
         }
 
-        // === кнопка "Нова гра" ===
-        Button restart = findViewById(R.id.btn_restart);
-        restart.setOnClickListener(v -> resetBoard());
-
-        // === кнопка "Головне меню" ===
-        Button menu = findViewById(R.id.btn_menu);
-        menu.setOnClickListener(v -> {
+        restartBtn.setOnClickListener(v -> resetBoard());
+        menuBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
         });
     }
 
-    // === перевірка перемоги ===
     private boolean checkWinner() {
-        // горизонталі та вертикалі
         for (int i = 0; i < 3; i++) {
             if (equal(cells[i][0], cells[i][1], cells[i][2])) return true;
             if (equal(cells[0][i], cells[1][i], cells[2][i])) return true;
         }
-        // діагоналі
         return equal(cells[0][0], cells[1][1], cells[2][2]) ||
                 equal(cells[0][2], cells[1][1], cells[2][0]);
     }
@@ -135,7 +132,6 @@ public class GameActivity extends Activity {
         return a.getTag().equals(b.getTag()) && a.getTag().equals(c.getTag());
     }
 
-    // === перевірка заповненості поля ===
     private boolean isFull() {
         for (ImageView[] row : cells)
             for (ImageView cell : row)
@@ -144,16 +140,26 @@ public class GameActivity extends Activity {
         return true;
     }
 
-    // === блокування кліків ===
     private void disableBoard() {
         for (FrameLayout[] row : containers)
             for (FrameLayout container : row)
                 container.setEnabled(false);
     }
 
-    // === скидання гри ===
+    private void showResult(String text) {
+        gameOver = true;
+        disableBoard();
+
+        resultText.setText(text);
+        endScreen.setVisibility(View.VISIBLE);
+
+        // Анімація затемнення (0 → 1 за 350мс)
+        endScreen.setAlpha(0f);
+        endScreen.setVisibility(View.VISIBLE);
+        endScreen.animate().alpha(1f).setDuration(350).start();
+    }
+
     private void resetBoard() {
-        // ✅ скасувати всі заплановані анімації
         handler.removeCallbacksAndMessages(null);
 
         for (int row = 0; row < 3; row++) {
@@ -164,7 +170,15 @@ public class GameActivity extends Activity {
                 containers[row][col].setEnabled(true);
             }
         }
+
         xTurn = true;
         gameOver = false;
+
+        // Ховаємо затемнення та кнопки назад
+        endScreen.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction(() -> endScreen.setVisibility(View.GONE))
+                .start();
     }
 }

@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
-public class git remote add origin https://github.com/Go0dpe0plse/xVSoRPG.gitMainActivity extends Activity {
+public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstancіeState) {
         super.onCreate(savedInstancіeState);
