@@ -2,6 +2,7 @@ package com.example.nakotest;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -18,17 +19,19 @@ import androidx.core.content.ContextCompat;
 
 public class GameActivity extends Activity {
 
+    TextView currentPlayerText;
+    TextView turnText;
+    private TextView timerText;
+    private int timeLeft = 10; // секунди на хід
+    private Handler timerHandler = new Handler();
+    private Runnable timerRunnable;
     private TextView resultText;
     private Button restartBtn, menuBtn;
-    private LinearLayout gameLayout;
     private LinearLayout endScreen;
-    private FrameLayout gridHolder;
     private GridLayout grid;
-
     private boolean xTurn = true;
     private boolean gameOver = false;
     private final Handler handler = new Handler();
-
     private ImageView[][] cells = new ImageView[3][3];
     private FrameLayout[][] containers = new FrameLayout[3][3];
     private Drawable xDrawable, oDrawable, plateDrawable;
@@ -37,6 +40,12 @@ public class GameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        currentPlayerText = findViewById(R.id.currentPlayerText);
+        turnText = findViewById(R.id.currentPlayerText);
+
+        timerText = findViewById(R.id.timerText);
+        startTurnTimer();
 
         // UI elements
         grid = findViewById(R.id.grid);
@@ -93,6 +102,7 @@ public class GameActivity extends Activity {
                     handler.postDelayed(() -> {
                         if (!gameOver && symbol.getTag() != null)
                             symbol.setImageResource(finalResId);
+                        startTurnTimer();
                     }, totalDuration);
 
                     if (checkWinner()) {
@@ -101,6 +111,13 @@ public class GameActivity extends Activity {
                         showResult("DRAW");
                     } else {
                         xTurn = !xTurn;
+                        if (xTurn)
+                            animateCurrentPlayer("Turn: X", Color.RED);
+                        else
+                            animateCurrentPlayer("Turn: 0", Color.BLUE);
+
+                        startTurnTimer();
+
                     }
                 });
 
@@ -152,11 +169,14 @@ public class GameActivity extends Activity {
 
         resultText.setText(text);
         endScreen.setVisibility(View.VISIBLE);
+        turnText.setVisibility(View.GONE);
+
 
         // Анімація затемнення (0 → 1 за 350мс)
         endScreen.setAlpha(0f);
         endScreen.setVisibility(View.VISIBLE);
         endScreen.animate().alpha(1f).setDuration(350).start();
+
     }
 
     private void resetBoard() {
@@ -175,10 +195,65 @@ public class GameActivity extends Activity {
         gameOver = false;
 
         // Ховаємо затемнення та кнопки назад
-        endScreen.animate()
-                .alpha(0f)
-                .setDuration(200)
-                .withEndAction(() -> endScreen.setVisibility(View.GONE))
-                .start();
+        endScreen.animate().alpha(0f).setDuration(200).withEndAction(() -> endScreen.setVisibility(View.GONE)).start();
+        turnText.setVisibility(View.VISIBLE);
+        updateTurnText();
+
     }
+    private void startTurnTimer() {
+        timeLeft = 10;
+        timerText.setText(String.valueOf(timeLeft));
+
+        if (timerRunnable != null)
+            timerHandler.removeCallbacks(timerRunnable);
+
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (gameOver) return;
+
+                timeLeft--;
+                timerText.setText(String.valueOf(timeLeft));
+
+                if (timeLeft <= 0) {
+
+                    // ----- 🟢 ПЕРЕХІД ХОДУ -----
+                    xTurn = !xTurn;
+
+                    // 🔥 ОНОВЛЮЄМО НАПИС ХТО ХОДЕ
+                    if (xTurn)
+                        animateCurrentPlayer("Turn: X", Color.RED);
+                    else
+                        animateCurrentPlayer("Turn: O", Color.BLUE);
+
+                    // 🔥 перезапуск таймера
+                    startTurnTimer();
+                    return;
+                }
+
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+
+        timerHandler.postDelayed(timerRunnable, 1000);
+    }
+
+
+    private void updateTurnText() {
+        if (xTurn) {
+            turnText.setText("Turn: X");
+            turnText.setTextColor(0xFFFF4444); // червоний
+        } else {
+            turnText.setText("Turn: 0");
+            turnText.setTextColor(0xFF3A86FF); // синій
+        }
+    }
+    private void animateCurrentPlayer(String text, int color) {
+        currentPlayerText.animate().alpha(0f).setDuration(250).withEndAction(() -> {
+                    currentPlayerText.setText(text);
+                    currentPlayerText.setTextColor(color);
+                    currentPlayerText.animate().alpha(1f).setDuration(250).start();}).start();
+    }
+
+
 }

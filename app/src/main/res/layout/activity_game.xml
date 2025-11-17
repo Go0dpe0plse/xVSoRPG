@@ -13,6 +13,16 @@
         android:gravity="center"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/currentPlayerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Turn: X"
+            android:textSize="26sp"
+            android:textColor="@android:color/holo_red_light"
+            android:layout_marginBottom="25dp"/>
+
+
         <GridLayout
             android:id="@+id/grid"
             android:layout_width="wrap_content"
@@ -20,6 +30,26 @@
             android:layout_marginBottom="20dp"
             android:columnCount="3"
             android:rowCount="3" />
+
+        <TextView
+            android:id="@+id/runningLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Running time: "
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:id="@+id/timerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10"
+            android:textSize="28sp"
+            android:textColor="@android:color/white"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"/>
+
     </LinearLayout>
 
     <LinearLayout
