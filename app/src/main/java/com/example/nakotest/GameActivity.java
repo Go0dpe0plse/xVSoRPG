@@ -7,6 +7,7 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -35,6 +36,12 @@ public class GameActivity extends Activity {
     private ImageView[][] cells = new ImageView[3][3];
     private FrameLayout[][] containers = new FrameLayout[3][3];
     private Drawable xDrawable, oDrawable, plateDrawable;
+
+    // Додані для паузи
+    private Button pauseBtn;
+    private LinearLayout pauseScreen;
+    private Button continueBtn, pauseRestartBtn, pauseMenuBtn;
+    private boolean isPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +89,7 @@ public class GameActivity extends Activity {
 
                 // click
                 cellContainer.setOnClickListener(v -> {
-                    if (gameOver) return;
+                    if (gameOver || isPaused) return;
                     if (symbol.getTag() != null) return;
 
                     int animRes = xTurn ? R.drawable.xanim : R.drawable.oanim;
@@ -114,10 +121,9 @@ public class GameActivity extends Activity {
                         if (xTurn)
                             animateCurrentPlayer("Turn: X", Color.RED);
                         else
-                            animateCurrentPlayer("Turn: 0", Color.BLUE);
+                            animateCurrentPlayer("Turn: O", Color.BLUE);
 
                         startTurnTimer();
-
                     }
                 });
 
@@ -132,8 +138,50 @@ public class GameActivity extends Activity {
             startActivity(new Intent(this, MainActivity.class));
             finish();
         });
+        // Кнопка паузи
+        pauseBtn = new Button(this);
+        pauseBtn.setText("≡");
+        pauseBtn.setTextSize(24f);
+        pauseBtn.setTextColor(Color.WHITE);
+        pauseBtn.setBackgroundColor(Color.parseColor("#444444"));
+        FrameLayout.LayoutParams pauseParams = new FrameLayout.LayoutParams(
+                120, 120, Gravity.TOP | Gravity.END);
+        pauseParams.setMargins(0, 20, 20, 0);
+        pauseBtn.setLayoutParams(pauseParams);
+        ((FrameLayout)findViewById(R.id.root_layout)).addView(pauseBtn);
+
+// Кнопка паузи
+        pauseScreen = findViewById(R.id.pause_screen);
+        continueBtn = findViewById(R.id.btn_continue);
+        pauseRestartBtn = findViewById(R.id.btn_pause_restart);
+        pauseMenuBtn = findViewById(R.id.btn_pause_menu);
+        pauseBtn.setOnClickListener(v -> {
+            isPaused = true;              // зупиняємо гру
+            pauseBtn.setVisibility(View.GONE); // кнопка зникає
+            pauseScreen.setVisibility(View.VISIBLE); // показуємо екран паузи
+        });
+// Continue — закриває паузу
+        continueBtn.setOnClickListener(v -> {
+            isPaused = false;
+            pauseScreen.setVisibility(View.GONE);
+            pauseBtn.setVisibility(View.VISIBLE);
+        });
+// Restart — починає нову гру
+        pauseRestartBtn.setOnClickListener(v -> {
+            resetBoard();
+            isPaused = false;
+            pauseScreen.setVisibility(View.GONE);
+            pauseBtn.setVisibility(View.VISIBLE);
+        });
+// Menu — повертає в головне меню
+        pauseMenuBtn.setOnClickListener(v -> {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
+
     }
 
+    // === Існуючі методи без змін ===
     private boolean checkWinner() {
         for (int i = 0; i < 3; i++) {
             if (equal(cells[i][0], cells[i][1], cells[i][2])) return true;
@@ -171,17 +219,18 @@ public class GameActivity extends Activity {
         endScreen.setVisibility(View.VISIBLE);
         turnText.setVisibility(View.GONE);
 
+        pauseBtn.setVisibility(View.GONE); // ховаємо кнопку паузи при кінці гри
 
-        // Анімація затемнення (0 → 1 за 350мс)
         endScreen.setAlpha(0f);
         endScreen.setVisibility(View.VISIBLE);
         endScreen.animate().alpha(1f).setDuration(350).start();
-
     }
 
     private void resetBoard() {
+        // зупиняємо таймер
         handler.removeCallbacksAndMessages(null);
-
+        timerHandler.removeCallbacks(timerRunnable);
+        // очищаємо клітинки
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 ImageView cell = cells[row][col];
@@ -190,16 +239,23 @@ public class GameActivity extends Activity {
                 containers[row][col].setEnabled(true);
             }
         }
-
+        // змінні гри
         xTurn = true;
         gameOver = false;
-
-        // Ховаємо затемнення та кнопки назад
-        endScreen.animate().alpha(0f).setDuration(200).withEndAction(() -> endScreen.setVisibility(View.GONE)).start();
+        isPaused = false;
+        // ховаємо всі екрани
+        endScreen.setVisibility(View.GONE);
+        pauseScreen.setVisibility(View.GONE);
+        pauseBtn.setVisibility(View.VISIBLE);
         turnText.setVisibility(View.VISIBLE);
+        // показуємо кнопку паузи
+        pauseBtn.setVisibility(View.VISIBLE);
+        // оновлюємо текст гравця
         updateTurnText();
-
+        // перезапускаємо таймер
+        startTurnTimer();
     }
+
     private void startTurnTimer() {
         timeLeft = 10;
         timerText.setText(String.valueOf(timeLeft));
@@ -210,23 +266,18 @@ public class GameActivity extends Activity {
         timerRunnable = new Runnable() {
             @Override
             public void run() {
-                if (gameOver) return;
+                if (gameOver || isPaused) return;
 
                 timeLeft--;
                 timerText.setText(String.valueOf(timeLeft));
 
                 if (timeLeft <= 0) {
-
-                    // ----- 🟢 ПЕРЕХІД ХОДУ -----
                     xTurn = !xTurn;
-
-                    // 🔥 ОНОВЛЮЄМО НАПИС ХТО ХОДЕ
                     if (xTurn)
                         animateCurrentPlayer("Turn: X", Color.RED);
                     else
                         animateCurrentPlayer("Turn: O", Color.BLUE);
 
-                    // 🔥 перезапуск таймера
                     startTurnTimer();
                     return;
                 }
@@ -236,24 +287,25 @@ public class GameActivity extends Activity {
         };
 
         timerHandler.postDelayed(timerRunnable, 1000);
-    }
+        if (gameOver || isPaused) return;
 
+    }
 
     private void updateTurnText() {
         if (xTurn) {
             turnText.setText("Turn: X");
-            turnText.setTextColor(0xFFFF4444); // червоний
+            turnText.setTextColor(0xFFFF4444);
         } else {
-            turnText.setText("Turn: 0");
-            turnText.setTextColor(0xFF3A86FF); // синій
+            turnText.setText("Turn: O");
+            turnText.setTextColor(0xFF3A86FF);
         }
     }
+
     private void animateCurrentPlayer(String text, int color) {
         currentPlayerText.animate().alpha(0f).setDuration(250).withEndAction(() -> {
-                    currentPlayerText.setText(text);
-                    currentPlayerText.setTextColor(color);
-                    currentPlayerText.animate().alpha(1f).setDuration(250).start();}).start();
+            currentPlayerText.setText(text);
+            currentPlayerText.setTextColor(color);
+            currentPlayerText.animate().alpha(1f).setDuration(250).start();
+        }).start();
     }
-
-
 }
