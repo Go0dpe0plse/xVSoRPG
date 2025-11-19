@@ -1,5 +1,6 @@
 package com.example.nakotest;
 
+import android.content.SharedPreferences;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -15,15 +16,23 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.core.content.ContextCompat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class RPGgameActivity extends Activity {
+    //АІ
+    public enum Difficulty {
+        EASY, MEDIUM, HARD
+    }
+    private Difficulty aiDifficulty = Difficulty.EASY; // за замовчуванням
+
+    private boolean aiThinking = false;
 
     TextView currentPlayerText;
     TextView turnText;
     private TextView timerText;
-
     private int timeLeft = 10;
     private Handler timerHandler = new Handler();
     private Runnable timerRunnable;
@@ -52,6 +61,8 @@ public class RPGgameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rpg_game_activity);
+
+        loadAIDifficulty();
 
         currentPlayerText = findViewById(R.id.currentPlayerText);
         turnText = findViewById(R.id.currentPlayerText);
@@ -92,7 +103,8 @@ public class RPGgameActivity extends Activity {
                 cellContainer.addView(symbol);
 
                 cellContainer.setOnClickListener(v -> {
-                    if (gameOver || isPaused) return;
+
+                    if (gameOver || isPaused || !xTurn || aiThinking) return;
                     if (symbol.getTag() != null) return;
 
                     int animRes = xTurn ? R.drawable.xanim : R.drawable.oanim;
@@ -114,6 +126,11 @@ public class RPGgameActivity extends Activity {
                         if (!gameOver && symbol.getTag() != null)
                             symbol.setImageResource(finalResId);
                         startTurnTimer();
+                        aiThinking = false;
+                        xTurn = !xTurn;
+                        updateTurnText();
+                        startTurnTimer();
+
                     }, totalDuration);
 
                     if (checkWinner()) {
@@ -121,10 +138,14 @@ public class RPGgameActivity extends Activity {
                     } else if (isFull()) {
                         showResult("DRAW");
                     } else {
-                        xTurn = !xTurn;
-                        updateTurnText();
-                        startTurnTimer();
+                        xTurn = false;       // передаємо хід AI
+                        aiThinking = true;   // блокування гравця
+
+                        handler.postDelayed(this::aiMove, 500); // затримка для природності
+
                     }
+
+
                 });
 
                 cells[row][col] = symbol;
@@ -236,6 +257,8 @@ public class RPGgameActivity extends Activity {
     }
 
     private void resetBoard() {
+        loadAIDifficulty(); // підвантажуємо останній вибір складності AI
+
         handler.removeCallbacksAndMessages(null);
         timerHandler.removeCallbacks(timerRunnable);
 
@@ -251,6 +274,7 @@ public class RPGgameActivity extends Activity {
         xTurn = true;
         gameOver = false;
         isPaused = false;
+        aiThinking = false;
 
         endScreen.setVisibility(View.GONE);
         pauseScreen.setVisibility(View.GONE);
@@ -259,6 +283,7 @@ public class RPGgameActivity extends Activity {
 
         updateTurnText();
         startTurnTimer();
+
     }
 
     private void startTurnTimer() {
@@ -277,14 +302,155 @@ public class RPGgameActivity extends Activity {
                 timerText.setText(String.valueOf(timeLeft));
 
                 if (timeLeft <= 0) {
-                    xTurn = !xTurn;
-                    updateTurnText();
-                    startTurnTimer();
+                    timerHandler.removeCallbacks(timerRunnable);
+
+                    if (xTurn) { // хід гравця X закінчився по таймеру
+                        xTurn = false;      // передаємо хід AI
+                        aiThinking = true;  // блокуємо дошку
+                        updateTurnText();
+                        handler.postDelayed(this::aiMove, 500); // AI робить хід з затримкою
+                    } else { // хід AI закінчився по таймеру (якщо колись потрібен таймер для AI)
+                        xTurn = true;
+                        aiThinking = false;
+                        updateTurnText();
+                        startTurnTimer();
+                    }
                     return;
                 }
 
+
                 timerHandler.postDelayed(this, 1000);
             }
+
+            private void aiMove() {
+                if (gameOver || isPaused) return;
+
+                aiThinking = true; // блокування гравця
+
+                // Вибір ходу залежно від складності
+                int[] move;
+                switch (aiDifficulty) {
+                    case EASY:
+                        move = getRandomMove();
+                        break;
+                    case MEDIUM:
+                        move = getMediumMove();
+                        break;
+                    case HARD:
+                        move = getHardMove();
+                        break;
+                    default:
+                        move = getRandomMove();
+                }
+
+                if (move == null) return; // немає ходів
+
+                // Виконуємо хід AI
+                makeMove(move[0], move[1], "O", R.drawable.oanim, R.drawable.o);
+            }
+            //Лeгкий
+            private int[] getRandomMove() {
+                List<int[]> emptyCells = new ArrayList<>();
+                for (int row = 0; row < 4; row++) {
+                    for (int col = 0; col < 4; col++) {
+                        if (cells[row][col].getTag() == null)
+                            emptyCells.add(new int[]{row, col});
+                    }
+                }
+                if (emptyCells.isEmpty()) return null;
+                return emptyCells.get(new Random().nextInt(emptyCells.size()));
+            }
+            //Середній
+            private int[] getMediumMove() {
+                // 50% шанс зробити виграшний хід, 50% – блок
+                int[] winMove = findWinningMove("O");
+                if (winMove != null && new Random().nextBoolean()) return winMove;
+
+                int[] blockMove = findWinningMove("X");
+                if (blockMove != null) return blockMove;
+
+                return getRandomMove();
+            }
+            //Складний
+            private int[] getHardMove() {
+                int[] winMove = findWinningMove("O");
+                if (winMove != null) return winMove;
+
+                int[] blockMove = findWinningMove("X");
+                if (blockMove != null) return blockMove;
+
+                // якщо немає прямих виграшів/блоків – центр або кут
+                if (cells[1][1].getTag() == null) return new int[]{1,1};
+                if (cells[2][2].getTag() == null) return new int[]{2,2};
+
+                return getRandomMove();
+            }
+            //Метод для перевірки виграшного ходу
+            private int[] findWinningMove(String player) {
+                for (int row = 0; row < 4; row++) {
+                    for (int col = 0; col < 4; col++) {
+                        if (cells[row][col].getTag() == null) {
+                            cells[row][col].setTag(player);
+                            boolean win = checkWinner();
+                            cells[row][col].setTag(null);
+                            if (win) return new int[]{row, col};
+                        }
+                    }
+                }
+                return null;
+            }
+            //Метод для виконання ходу (анімоване)
+            private void makeMove(int row, int col, String player, int animRes, int finalResId) {
+                aiThinking = true;
+
+                ImageView symbol = cells[row][col];
+
+                AnimationDrawable animation = (AnimationDrawable)
+                        ContextCompat.getDrawable(RPGgameActivity.this, animRes).mutate(); // <- тут
+
+                symbol.setImageDrawable(animation);
+                symbol.setVisibility(View.VISIBLE);
+                symbol.setTag(player);
+                animation.start();
+
+                int totalDuration = 0;
+                for (int i = 0; i < animation.getNumberOfFrames(); i++)
+                    totalDuration += animation.getDuration(i);
+
+                handler.postDelayed(() -> {
+                    if (!gameOver && symbol.getTag() != null)
+                        symbol.setImageResource(finalResId);
+
+                    // === Перевірка переможця ===
+                    if (checkWinner()) {
+                        showResult(player.equals("O") ? "WIN O" : "WIN X");
+                        aiThinking = false; // розблокування дошки
+                        return; // гра завершена, вихід
+                    } else if (isFull()) {
+                        showResult("DRAW");
+                        aiThinking = false;
+                        return;
+                    }
+
+                    // === Переключення ходу ===
+                    if (player.equals("O")) {
+                        // AI зробив хід, передаємо хід гравцеві
+                        aiThinking = false;
+                        xTurn = true;
+                        updateTurnText();
+                        startTurnTimer();
+                    } else {
+                        // гравець X зробив хід, передаємо хід AI
+                        xTurn = false;
+                        aiThinking = true;
+                        updateTurnText();
+                        handler.postDelayed(this::aiMove, 500);
+                    }
+                }, totalDuration);
+
+            }
+
+
         };
 
         timerHandler.postDelayed(timerRunnable, 1000);
@@ -297,6 +463,130 @@ public class RPGgameActivity extends Activity {
         } else {
             currentPlayerText.setText("Turn: O");
             currentPlayerText.setTextColor(Color.BLUE);
+        }
+    }
+    private void aiMove() {
+        aiThinking = true;
+
+        if (gameOver || isPaused) return;
+
+        int[] move;
+
+        switch (aiDifficulty) {
+            case EASY:
+                move = getRandomMove();
+                break;
+            case MEDIUM:
+                move = getMediumMove();
+                break;
+            case HARD:
+                move = getHardMove();
+                break;
+            default:
+                move = getRandomMove();
+        }
+
+        if (move == null) return; // немає ходів
+
+        makeMove(move[0], move[1], "O", R.drawable.oanim, R.drawable.o);
+    }
+    //Лeгкий
+    private int[] getRandomMove() {
+        List<int[]> emptyCells = new ArrayList<>();
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                if (cells[row][col].getTag() == null)
+                    emptyCells.add(new int[]{row, col});
+            }
+        }
+        if (emptyCells.isEmpty()) return null;
+        return emptyCells.get(new Random().nextInt(emptyCells.size()));
+    }
+    //Середній
+    private int[] getMediumMove() {
+        // 50% шанс зробити виграшний хід, 50% – блок
+        int[] winMove = findWinningMove("O");
+        if (winMove != null && new Random().nextBoolean()) return winMove;
+
+        int[] blockMove = findWinningMove("X");
+        if (blockMove != null) return blockMove;
+
+        return getRandomMove();
+    }
+    //Складний
+    private int[] getHardMove() {
+        int[] winMove = findWinningMove("O");
+        if (winMove != null) return winMove;
+
+        int[] blockMove = findWinningMove("X");
+        if (blockMove != null) return blockMove;
+
+        // якщо немає прямих виграшів/блоків – центр або кут
+        if (cells[1][1].getTag() == null) return new int[]{1,1};
+        if (cells[2][2].getTag() == null) return new int[]{2,2};
+
+        return getRandomMove();
+    }
+    //Метод для перевірки виграшного ходу
+    private int[] findWinningMove(String player) {
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                if (cells[row][col].getTag() == null) {
+                    cells[row][col].setTag(player);
+                    boolean win = checkWinner();
+                    cells[row][col].setTag(null);
+                    if (win) return new int[]{row, col};
+                }
+            }
+        }
+        return null;
+    }
+    //Метод для виконання ходу (анімоване)
+    private void makeMove(int row, int col, String player, int animRes, int finalResId) {
+        aiThinking = true; // блокування гравця
+
+        ImageView symbol = cells[row][col];
+        AnimationDrawable animation = (AnimationDrawable)
+                ContextCompat.getDrawable(this, animRes).mutate();
+
+        symbol.setImageDrawable(animation);
+        symbol.setVisibility(View.VISIBLE);
+        symbol.setTag(player);
+        animation.start();
+
+        int totalDuration = 0;
+        for (int i = 0; i < animation.getNumberOfFrames(); i++)
+            totalDuration += animation.getDuration(i);
+
+        handler.postDelayed(() -> {
+            if (!gameOver && symbol.getTag() != null)
+                symbol.setImageResource(finalResId);
+
+            aiThinking = false; // розблокування гравця
+
+            if (checkWinner()) {
+                showResult("WIN " + player);
+            } else if (isFull()) {
+                showResult("DRAW");
+            } else {
+                aiThinking = false; // розблокування
+                xTurn = true;       // повертаємо хід гравцеві
+                updateTurnText();
+                startTurnTimer();
+
+            }
+        }, totalDuration);
+    }
+    //Вибір складності
+    private void loadAIDifficulty() {
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        int level = prefs.getInt("ai_level", 1); // 0 - Easy, 1 - Medium, 2 - Hard
+
+        switch (level) {
+            case 0: aiDifficulty = Difficulty.EASY; break;
+            case 1: aiDifficulty = Difficulty.MEDIUM; break;
+            case 2: aiDifficulty = Difficulty.HARD; break;
+            default: aiDifficulty = Difficulty.EASY;
         }
     }
 }

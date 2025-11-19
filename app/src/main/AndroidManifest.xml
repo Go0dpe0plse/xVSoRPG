@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
         android:theme="@style/Theme.NakoTest">
+
+        <activity android:name=".SettingsActivity" />
+
+        <activity android:name=".RPGMainActivity" />
+
+        <activity android:name=".GameActivity" />
+
+        <activity android:name=".RPGgameActivity" />
+
+        <activity android:name=".Skills" />
 
         <activity
             android:name=".MainActivity"
@@ -21,10 +26,5 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".GameActivity"/>
-        <activity android:name=".RPGMainActivity" />
-        <activity android:name=".RPGgameActivity" />
-        <activity android:name=".Skills" />
     </application>
-
 </manifest>
