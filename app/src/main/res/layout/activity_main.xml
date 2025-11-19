@@ -30,6 +30,16 @@
             android:textSize="18sp"/>
 
         <Button
+            android:id="@+id/btnSettings"
+            android:text="Settings"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="#3a86ff"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"/>
+
+        <Button
             android:id="@+id/btn_exit"
             android:text="Exit"
             android:layout_width="200dp"
@@ -39,7 +49,6 @@
             android:textSize="18sp"
             android:layout_marginTop="20dp"/>
     </LinearLayout>
-
     <!-- ЕКРАН ВИБОРУ РЕЖИМУ -->
     <LinearLayout
         android:id="@+id/start_mode_screen"
