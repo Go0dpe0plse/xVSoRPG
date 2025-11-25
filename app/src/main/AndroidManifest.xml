@@ -15,7 +15,7 @@
 
         <activity android:name=".RPGgameActivity" />
 
-        <activity android:name=".Skills" />
+        <activity android:name=".SkillsActivity" />
 
         <activity
             android:name=".MainActivity"

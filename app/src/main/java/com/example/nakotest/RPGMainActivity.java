@@ -25,7 +25,7 @@ public class RPGMainActivity extends AppCompatActivity {
 
         // Кнопка Skills
         btnSkills.setOnClickListener(v -> {
-            Intent intent = new Intent(RPGMainActivity.this, Skills.class);
+            Intent intent = new Intent(RPGMainActivity.this, SkillsActivity.class);
             startActivity(intent);
         });
 

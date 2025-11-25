@@ -16,6 +16,8 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,9 @@ public class RPGgameActivity extends Activity {
         EASY, MEDIUM, HARD
     }
     private Difficulty aiDifficulty = Difficulty.EASY; // за замовчуванням
+    //Мана
+    private int mana = 100;
+    private TextView manaText;
 
     private boolean aiThinking = false;
 
@@ -61,6 +66,16 @@ public class RPGgameActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rpg_game_activity);
+//Мана
+        manaText = findViewById(R.id.manaText);
+        updateManaText();
+
+        manaText = findViewById(R.id.manaText);
+        Button btnUseMana = findViewById(R.id.btn_use_mana);
+
+        btnUseMana.setOnClickListener(v -> {
+            useMana(50); // тимчасово витрачаємо 50
+        });
 
         loadAIDifficulty();
 
@@ -284,6 +299,8 @@ public class RPGgameActivity extends Activity {
         updateTurnText();
         startTurnTimer();
 
+        mana = 100;
+        manaText.setText("Mana: " + mana + "/100");
     }
 
     private void startTurnTimer() {
@@ -589,4 +606,16 @@ public class RPGgameActivity extends Activity {
             default: aiDifficulty = Difficulty.EASY;
         }
     }
+    private void updateManaText() {
+        manaText.setText("Mana: " + mana + "/100");
+    }
+    private void useMana(int amount) {
+        if (mana >= amount) {
+            mana -= amount;
+            manaText.setText("Mana: " + mana + "/100");
+        } else {
+            Toast.makeText(this, "Not enough mana!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }

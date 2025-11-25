@@ -23,17 +23,23 @@
         <RadioButton
             android:id="@+id/aiEasy"
             android:text="Easy"
-            android:textColor="@android:color/white"/>
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
         <RadioButton
             android:id="@+id/aiMedium"
             android:text="Medium"
-            android:textColor="@android:color/white"/>
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
         <RadioButton
             android:id="@+id/aiHard"
             android:text="Hard"
-            android:textColor="@android:color/white"/>
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
     </RadioGroup>
 
     <Button
