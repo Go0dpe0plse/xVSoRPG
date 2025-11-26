@@ -21,16 +21,6 @@
             android:textColor="@android:color/holo_red_light"
             android:layout_marginBottom="25dp"/>
 
-        <!-- 🔵 МАНА (ДОДАНО СЮДИ) -->
-        <TextView
-            android:id="@+id/manaText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mana: 100/100"
-            android:textColor="@android:color/holo_blue_light"
-            android:textSize="22sp"
-            android:layout_marginBottom="20dp"/>
-
         <GridLayout
             android:id="@+id/grid"
             android:layout_width="wrap_content"
@@ -58,15 +48,6 @@
             android:text="10"
             android:textColor="@android:color/white"
             android:textSize="28sp" />
-
-        <Button
-            android:id="@+id/btn_use_mana"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="Use Mana"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="#3a86ff"
-            android:textColor="@android:color/white"/>
 
     </LinearLayout>
 

@@ -7,15 +7,9 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.NakoTest">
 
-        <activity android:name=".SettingsActivity" />
-
-        <activity android:name=".RPGMainActivity" />
-
         <activity android:name=".GameActivity" />
 
         <activity android:name=".RPGgameActivity" />
-
-        <activity android:name=".SkillsActivity" />
 
         <activity
             android:name=".MainActivity"

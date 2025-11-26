@@ -61,7 +61,7 @@
         android:visibility="gone">
 
         <Button
-            android:id="@+id/btn_mode_3"
+            android:id="@+id/btn_mode_1"
             android:text="Standart Game"
             android:layout_width="220dp"
             android:layout_height="wrap_content"
@@ -70,7 +70,7 @@
             android:textColor="@android:color/white"/>
 
         <Button
-            android:id="@+id/btn_mode_4"
+            android:id="@+id/btn_mode_2"
             android:text="Advanced Mod"
             android:layout_width="220dp"
             android:layout_height="wrap_content"
@@ -84,5 +84,59 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"/>
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="30dp"
+        android:gravity="center"
+        android:background="#222222"
+        android:visibility="gone">
+
+        <TextView
+            android:text="AI Difficulty"
+            android:textSize="24sp"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <RadioGroup
+            android:id="@+id/aiGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/aiEasy"
+                android:text="Easy"
+                android:textColor="@android:color/white"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <RadioButton
+                android:id="@+id/aiMedium"
+                android:text="Medium"
+                android:textColor="@android:color/white"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <RadioButton
+                android:id="@+id/aiHard"
+                android:text="Hard"
+                android:textColor="@android:color/white"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btn_return_settings"
+            android:text="Return"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"/>
+    </LinearLayout>
+
 
 </FrameLayout>

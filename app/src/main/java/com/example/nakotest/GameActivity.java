@@ -20,23 +20,35 @@ import androidx.core.content.ContextCompat;
 
 public class GameActivity extends Activity {
 
+    // Текстові поля інтерфейсу: поточний гравець та таймер
     TextView currentPlayerText;
     TextView turnText;
     private TextView timerText;
-    private int timeLeft = 10; // секунди на хід
+
+    // Логіка таймера ходу
+    private int timeLeft = 10;
     private Handler timerHandler = new Handler();
     private Runnable timerRunnable;
+
+    // Екран із результатом гри
     private TextView resultText;
     private Button restartBtn, menuBtn;
     private LinearLayout endScreen;
+
+    // Сітка поля
     private GridLayout grid;
     private boolean xTurn = true;
     private boolean gameOver = false;
+
+    // Анімації символів
     private final Handler handler = new Handler();
     private ImageView[][] cells = new ImageView[3][3];
     private FrameLayout[][] containers = new FrameLayout[3][3];
+
+    // Зображення X, O та фону клітинки
     private Drawable xDrawable, oDrawable, plateDrawable;
-    // Додані для паузи
+
+    // Логіка паузи
     private Button pauseBtn;
     private LinearLayout pauseScreen;
     private Button continueBtn, pauseRestartBtn, pauseMenuBtn;
@@ -47,59 +59,67 @@ public class GameActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        // Ініціалізація текстових елементів
         currentPlayerText = findViewById(R.id.currentPlayerText);
         turnText = findViewById(R.id.currentPlayerText);
-
         timerText = findViewById(R.id.timerText);
+
+        // Запуск таймера ходу
         startTurnTimer();
 
-        // UI elements
+        // Ініціалізація UI елементів
         grid = findViewById(R.id.grid);
         endScreen = findViewById(R.id.end_screen);
-
         restartBtn = findViewById(R.id.btn_restart);
         menuBtn = findViewById(R.id.btn_menu);
         resultText = findViewById(R.id.resultText);
 
+        // Завантаження ресурсів
         xDrawable = getDrawable(R.drawable.x);
         oDrawable = getDrawable(R.drawable.o);
         plateDrawable = getDrawable(R.drawable.plate);
 
+        // Створення ігрового поля 3×3
         int size = 250;
-
-        // === створення поля ===
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
 
+                // Контейнер клітинки
                 FrameLayout cellContainer = new FrameLayout(this);
                 ImageView plate = new ImageView(this);
                 ImageView symbol = new ImageView(this);
 
+                // Параметри розміру клітинки
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = size;
                 params.height = size;
                 cellContainer.setLayoutParams(params);
 
+                // Заповнюємо фон клітинки
                 plate.setImageDrawable(plateDrawable);
                 symbol.setImageDrawable(null);
 
+                // Додаємо фон та символ у контейнер
                 cellContainer.addView(plate);
                 cellContainer.addView(symbol);
 
-                // click
+                // Обробка натискання на клітинку
                 cellContainer.setOnClickListener(v -> {
                     if (gameOver || isPaused) return;
                     if (symbol.getTag() != null) return;
 
+                    // Вибір анімації залежно від гравця
                     int animRes = xTurn ? R.drawable.xanim : R.drawable.oanim;
                     int finalResId = xTurn ? R.drawable.x : R.drawable.o;
 
+                    // Включення анімації появи символу
                     AnimationDrawable animation = (AnimationDrawable) ContextCompat.getDrawable(this, animRes).mutate();
                     symbol.setImageDrawable(animation);
                     symbol.setVisibility(View.VISIBLE);
                     symbol.setTag(xTurn ? "X" : "O");
                     animation.start();
 
+                    // Після завершення анімації ставим фінальне зображення
                     int totalDuration = 0;
                     for (int i = 0; i < animation.getNumberOfFrames(); i++) {
                         totalDuration += animation.getDuration(i);
@@ -111,11 +131,13 @@ public class GameActivity extends Activity {
                         startTurnTimer();
                     }, totalDuration);
 
+                    // Перевірка на перемогу або нічию
                     if (checkWinner()) {
                         showResult(xTurn ? "WIN X" : "WIN O");
                     } else if (isFull()) {
                         showResult("DRAW");
                     } else {
+                        // Зміна гравця
                         xTurn = !xTurn;
                         if (xTurn)
                             animateCurrentPlayer("Turn: X", Color.RED);
@@ -126,61 +148,75 @@ public class GameActivity extends Activity {
                     }
                 });
 
+                // Зберігаємо клітинку в масиві
                 cells[row][col] = symbol;
                 containers[row][col] = cellContainer;
+
+                // Додаємо клітинку в GridLayout
                 grid.addView(cellContainer);
             }
         }
 
+        // Кнопка рестарту гри
         restartBtn.setOnClickListener(v -> resetBoard());
+
+        // Кнопка переходу в меню
         menuBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
         });
-        // Кнопка паузи
+
+        // === Кнопка паузи у правому верхньому куті ===
         pauseBtn = new Button(this);
         pauseBtn.setText("≡");
         pauseBtn.setTextSize(24f);
         pauseBtn.setTextColor(Color.WHITE);
         pauseBtn.setBackgroundColor(Color.parseColor("#444444"));
+
         FrameLayout.LayoutParams pauseParams = new FrameLayout.LayoutParams(
                 120, 120, Gravity.TOP | Gravity.END);
         pauseParams.setMargins(0, 20, 20, 0);
         pauseBtn.setLayoutParams(pauseParams);
+
+        // Додаємо кнопку на головний Layout
         ((FrameLayout)findViewById(R.id.root_layout)).addView(pauseBtn);
 
-// Кнопка паузи
+        // === Екран паузи та кнопки в ньому ===
         pauseScreen = findViewById(R.id.pause_screen);
         continueBtn = findViewById(R.id.btn_continue);
         pauseRestartBtn = findViewById(R.id.btn_pause_restart);
         pauseMenuBtn = findViewById(R.id.btn_pause_menu);
+
+        // Відкрити паузу
         pauseBtn.setOnClickListener(v -> {
-            isPaused = true;              // зупиняємо гру
-            pauseBtn.setVisibility(View.GONE); // кнопка зникає
-            pauseScreen.setVisibility(View.VISIBLE); // показуємо екран паузи
+            isPaused = true;
+            pauseBtn.setVisibility(View.GONE);
+            pauseScreen.setVisibility(View.VISIBLE);
         });
-// Continue — закриває паузу
+
+        // Продовжити гру
         continueBtn.setOnClickListener(v -> {
             isPaused = false;
             pauseScreen.setVisibility(View.GONE);
             pauseBtn.setVisibility(View.VISIBLE);
         });
-// Restart — починає нову гру
+
+        // Рестарт із екрана паузи
         pauseRestartBtn.setOnClickListener(v -> {
             resetBoard();
             isPaused = false;
             pauseScreen.setVisibility(View.GONE);
             pauseBtn.setVisibility(View.VISIBLE);
         });
-// Menu — повертає в головне меню
+
+        // Вихід у меню
         pauseMenuBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, MainActivity.class));
             finish();
         });
-
     }
 
-    // === Існуючі методи без змін ===
+    // === Перевірка переможця (рядки, колонки, діагоналі) ===
     private boolean checkWinner() {
         for (int i = 0; i < 3; i++) {
             if (equal(cells[i][0], cells[i][1], cells[i][2])) return true;
@@ -190,12 +226,14 @@ public class GameActivity extends Activity {
                 equal(cells[0][2], cells[1][1], cells[2][0]);
     }
 
+    // === Перевірка: чи три однакові клітинки ===
     private boolean equal(ImageView a, ImageView b, ImageView c) {
         if (a.getTag() == null || b.getTag() == null || c.getTag() == null)
             return false;
         return a.getTag().equals(b.getTag()) && a.getTag().equals(c.getTag());
     }
 
+    // === Перевірка чи поле повністю заповнено ===
     private boolean isFull() {
         for (ImageView[] row : cells)
             for (ImageView cell : row)
@@ -204,12 +242,14 @@ public class GameActivity extends Activity {
         return true;
     }
 
+    // === Вимкнення всіх клітинок після завершення гри ===
     private void disableBoard() {
         for (FrameLayout[] row : containers)
             for (FrameLayout container : row)
                 container.setEnabled(false);
     }
 
+    // === Показ фінального екрану з результатом ===
     private void showResult(String text) {
         gameOver = true;
         disableBoard();
@@ -218,18 +258,20 @@ public class GameActivity extends Activity {
         endScreen.setVisibility(View.VISIBLE);
         turnText.setVisibility(View.GONE);
 
-        pauseBtn.setVisibility(View.GONE); // ховаємо кнопку паузи при кінці гри
+        pauseBtn.setVisibility(View.GONE);
 
         endScreen.setAlpha(0f);
         endScreen.setVisibility(View.VISIBLE);
         endScreen.animate().alpha(1f).setDuration(350).start();
     }
 
+    // === Скидання гри до початкового стану ===
     private void resetBoard() {
-        // зупиняємо таймер
+
         handler.removeCallbacksAndMessages(null);
         timerHandler.removeCallbacks(timerRunnable);
-        // очищаємо клітинки
+
+        // Очищення поля
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 ImageView cell = cells[row][col];
@@ -238,23 +280,22 @@ public class GameActivity extends Activity {
                 containers[row][col].setEnabled(true);
             }
         }
-        // змінні гри
+
+        // Скидання змінних гри
         xTurn = true;
         gameOver = false;
         isPaused = false;
-        // ховаємо всі екрани
+
         endScreen.setVisibility(View.GONE);
         pauseScreen.setVisibility(View.GONE);
         pauseBtn.setVisibility(View.VISIBLE);
         turnText.setVisibility(View.VISIBLE);
-        // показуємо кнопку паузи
-        pauseBtn.setVisibility(View.VISIBLE);
-        // оновлюємо текст гравця
+
         updateTurnText();
-        // перезапускаємо таймер
         startTurnTimer();
     }
 
+    // === Таймер ходу (щосекунди зменшує час) ===
     private void startTurnTimer() {
         timeLeft = 10;
         timerText.setText(String.valueOf(timeLeft));
@@ -271,7 +312,10 @@ public class GameActivity extends Activity {
                 timerText.setText(String.valueOf(timeLeft));
 
                 if (timeLeft <= 0) {
+
+                    // Автоматична передача ходу
                     xTurn = !xTurn;
+
                     if (xTurn)
                         animateCurrentPlayer("Turn: X", Color.RED);
                     else
@@ -287,9 +331,9 @@ public class GameActivity extends Activity {
 
         timerHandler.postDelayed(timerRunnable, 1000);
         if (gameOver || isPaused) return;
-
     }
 
+    // === Оновлення тексту "чий хід" ===
     private void updateTurnText() {
         if (xTurn) {
             turnText.setText("Turn: X");
@@ -300,6 +344,7 @@ public class GameActivity extends Activity {
         }
     }
 
+    // === Анімація зміни поточного гравця ===
     private void animateCurrentPlayer(String text, int color) {
         currentPlayerText.animate().alpha(0f).setDuration(250).withEndAction(() -> {
             currentPlayerText.setText(text);
