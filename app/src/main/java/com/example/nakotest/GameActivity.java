@@ -215,8 +215,7 @@ public class GameActivity extends Activity {
             finish();
         });
     }
-
-    // === Перевірка переможця (рядки, колонки, діагоналі) ===
+    
     private boolean checkWinner() {
         for (int i = 0; i < 3; i++) {
             if (equal(cells[i][0], cells[i][1], cells[i][2])) return true;
@@ -226,14 +225,12 @@ public class GameActivity extends Activity {
                 equal(cells[0][2], cells[1][1], cells[2][0]);
     }
 
-    // === Перевірка: чи три однакові клітинки ===
     private boolean equal(ImageView a, ImageView b, ImageView c) {
         if (a.getTag() == null || b.getTag() == null || c.getTag() == null)
             return false;
         return a.getTag().equals(b.getTag()) && a.getTag().equals(c.getTag());
     }
 
-    // === Перевірка чи поле повністю заповнено ===
     private boolean isFull() {
         for (ImageView[] row : cells)
             for (ImageView cell : row)
@@ -242,14 +239,11 @@ public class GameActivity extends Activity {
         return true;
     }
 
-    // === Вимкнення всіх клітинок після завершення гри ===
     private void disableBoard() {
         for (FrameLayout[] row : containers)
             for (FrameLayout container : row)
                 container.setEnabled(false);
     }
-
-    // === Показ фінального екрану з результатом ===
     private void showResult(String text) {
         gameOver = true;
         disableBoard();
@@ -265,13 +259,11 @@ public class GameActivity extends Activity {
         endScreen.animate().alpha(1f).setDuration(350).start();
     }
 
-    // === Скидання гри до початкового стану ===
     private void resetBoard() {
 
         handler.removeCallbacksAndMessages(null);
         timerHandler.removeCallbacks(timerRunnable);
 
-        // Очищення поля
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 ImageView cell = cells[row][col];
@@ -281,7 +273,6 @@ public class GameActivity extends Activity {
             }
         }
 
-        // Скидання змінних гри
         xTurn = true;
         gameOver = false;
         isPaused = false;
@@ -295,7 +286,6 @@ public class GameActivity extends Activity {
         startTurnTimer();
     }
 
-    // === Таймер ходу (щосекунди зменшує час) ===
     private void startTurnTimer() {
         timeLeft = 10;
         timerText.setText(String.valueOf(timeLeft));
@@ -313,7 +303,6 @@ public class GameActivity extends Activity {
 
                 if (timeLeft <= 0) {
 
-                    // Автоматична передача ходу
                     xTurn = !xTurn;
 
                     if (xTurn)
@@ -333,7 +322,6 @@ public class GameActivity extends Activity {
         if (gameOver || isPaused) return;
     }
 
-    // === Оновлення тексту "чий хід" ===
     private void updateTurnText() {
         if (xTurn) {
             turnText.setText("Turn: X");
@@ -344,7 +332,6 @@ public class GameActivity extends Activity {
         }
     }
 
-    // === Анімація зміни поточного гравця ===
     private void animateCurrentPlayer(String text, int color) {
         currentPlayerText.animate().alpha(0f).setDuration(250).withEndAction(() -> {
             currentPlayerText.setText(text);
