@@ -1,16 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/root_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#222222">
+    android:layout_height="match_parent">
 
-    <!-- Основне поле -->
+    <!-- ФОНОВА КАРТИНКА -->
+    <ImageView
+        android:id="@+id/background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/mainmenu" />
+
+    <!-- Всі інші елементи зверху -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:background="#222222">
+        android:padding="0dp">
 
         <TextView
             android:id="@+id/currentPlayerText"
@@ -33,7 +40,7 @@
             android:id="@+id/runningLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Running time: "
+            android:text="Running time:"
             android:textColor="@android:color/white"
             android:textSize="20sp"
             android:layout_marginBottom="10dp"/>
@@ -42,11 +49,10 @@
             android:id="@+id/timerText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
             android:text="10"
+            android:textSize="28sp"
             android:textColor="@android:color/white"
-            android:textSize="28sp" />
+            android:layout_marginTop="20dp"/>
     </LinearLayout>
 
     <!-- Екран завершення гри -->
@@ -83,7 +89,7 @@
 
             <Button
                 android:id="@+id/btn_restart"
-                android:text="New Game"
+                android:text="Нова гра"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#3a86ff"
@@ -91,47 +97,12 @@
 
             <Button
                 android:id="@+id/btn_menu"
-                android:text="Menu"
+                android:text="Головне меню"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"/>
         </LinearLayout>
-    </LinearLayout>
-    <!-- Екран паузи -->
-    <LinearLayout
-        android:id="@+id/pause_screen"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingTop="80dp"
-        android:paddingBottom="80dp"
-        android:background="#AA000000"
-        android:visibility="gone">
 
-        <Button
-            android:id="@+id/btn_continue"
-            android:text="Continue"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#3a86ff"
-            android:textColor="@android:color/white"/>
-
-        <Button
-            android:id="@+id/btn_pause_restart"
-            android:text="Restart"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:backgroundTint="#3a86ff"
-            android:textColor="@android:color/white"/>
-
-        <Button
-            android:id="@+id/btn_pause_menu"
-            android:text="Menu"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"/>
     </LinearLayout>
 
 </FrameLayout>
